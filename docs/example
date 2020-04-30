@@ -1,0 +1,15 @@
+This is the average “tone” of all documents containing one or more mentions of this event during the 15 minute update
+
+ in which it was first seen. The score ranges from -100 (extremely negative) to +100 (extremely positive). 
+ Common values range between -10 and +10, with 0 indicating neutral. This can be used as a method of filtering the “context”
+  of events as a subtle measure of the importance of an event and as a proxy for the “impact” of that event. For example, 
+  a riot event with a slightly negative average tone is likely to have been a minor occurrence, whereas if it had an extremely 
+  negative average tone, it suggests a far more serious occurrence. A riot with a positive score likely suggests a very minor o
+  ccurrence described in the context of a more positive narrative (such as a report of an attack occurring in a discussion of
+   improving conditions on the ground in a country and how the number of attacks per day has been greatly reduced). 
+   
+   
+   NOTE: this field refers only to the first news report to mention an event and is not updated if the event is found in a different context in other news reports. 
+   It is included for legacy purposes – for more precise information on the positioning of an event, see the Mentions table. 
+   NOTE: this provides only a basic tonal assessment of an article and it is recommended that users interested in emotional measures 
+   use the Mentions and Global Knowledge Graph tables to merge the complete set of 2,300 emotions and themes from the GKG GCAM system into their analysis of event records.
