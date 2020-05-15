@@ -27,7 +27,7 @@ public final class CoronaCounterMain {
 		Logger.getLogger("org").setLevel(Level.OFF);
 		Logger.getLogger("akka").setLevel(Level.OFF);
 
-		//new Thread(new CoronaDownloadNews()).start();
+		new Thread(new CoronaDownloadNews()).start();
 
 		SparkSession spark = SparkSession.builder().config("spark.eventLog.enabled", "false")
 				.config("spark.driver.memory", "3g").config("spark.master", "local")
