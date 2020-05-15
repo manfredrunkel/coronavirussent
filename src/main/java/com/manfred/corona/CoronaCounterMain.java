@@ -1,10 +1,15 @@
 package com.manfred.corona;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.spark.api.java.function.VoidFunction2;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.streaming.OutputMode;
 import org.apache.spark.sql.streaming.StreamingQuery;
@@ -25,54 +30,33 @@ public final class CoronaCounterMain {
 		//new Thread(new CoronaDownloadNews()).start();
 
 		SparkSession spark = SparkSession.builder().config("spark.eventLog.enabled", "false")
-				.config("spark.driver.memory", "2g").config("spark.master", "local")
-				.config("spark.executor.memory", "2g").appName("StructuredStreamingAverage").getOrCreate();
+				.config("spark.driver.memory", "3g").config("spark.master", "local")
+				.config("spark.executor.memory", "3g").appName("StructuredStreamingAverage").getOrCreate();
 
 		StructType newsSchema = new StructType();
 		for (int i = 0; i <= 26; i++) {
 			newsSchema = newsSchema.add("field" + i, "string");
 		}
 
-		Dataset<Row> newsStream = spark.readStream().schema(newsSchema).option("delimiter", "\t").csv(INPUT_DIRECTORY);
+		Dataset<Row> newsStream = spark.read().schema(newsSchema).option("delimiter", "\t").csv(INPUT_DIRECTORY);
 
 		newsStream.createOrReplaceTempView("news");
+
+		/*String sql =  "SELECT count(*) "
+				+ "FROM news where field7 like '%CORONAVIRUS%'";*/
 		
-		String sql = "SELECT avg(split(field15, ',')[0]) as tone, field1 as currentDateAnalysis "
-				+ "FROM news where field7 like '%TAX_DISEASE_CORONAVIRUS%' group by currentDateAnalysis";
+		String sql = "SELECT avg(split(field15, ',')[0]) as avg, "
+				+ "max(split(field15, ',')[0]) as max , "
+				+ "min(split(field15, ',')[0]) as min, "
+				+ "sum(split(field15, ',')[0])  as sum, "
+				+ "field1 as currentDateAnalysis, "
+				+ "count(*) as nrOfNews "
+				+ "FROM news where field7 like '%TAX_DISEASE_CORONAVIRUS%' group by currentDateAnalysis order by currentDateAnalysis";
+		
+		
 		final Dataset<Row> result = spark.sql(sql);
-
-		/*String sql = "SELECT avg(split(field15, ',')[0]) as tone, field1 as currentDateAnalysis "
-				+ "FROM news where field4 like '%corona%' group by currentDateAnalysis";
-		*/
-
-		StreamingQuery query = result.writeStream().outputMode(OutputMode.Complete()).foreach(new ForeachWriter<Row>() {
-			@Override
-			public void process(Row value) {
-				double tone = (Double) value.get(0);
-				long timestamp = Long.valueOf((String) value.get(1));
-				CoronaResult coronaResult = new CoronaResult();
-				if (coronaResults.containsKey(timestamp)) {
-					coronaResult = coronaResults.get(timestamp);
-				}
-				coronaResult.setTimestamp(timestamp);
-				coronaResult.setTone(tone);
-				//coronaResult.setNewsTotalCoronaVirus(value.getLong(2));
-				coronaResults.put(timestamp, coronaResult);
-				System.out.println(coronaResult);
-			}
-
-			@Override
-			public boolean open(long partitionId, long epochId) {
-				return true;
-			}
-
-			@Override
-			public void close(Throwable errorOrNull) {
-
-			}
-		}).start();
 		
-		query.awaitTermination();
+		result.coalesce(1).write().mode(SaveMode.Overwrite).csv("src/main/resources/result/file.resultCorona.csv");
 	}
 
 }
